@@ -345,7 +345,7 @@ export default function Results() {
     if (type === "functional") {
       if (score >= 70) return "🔴 Severe Impairment";
       if (score >= 40) return "🟡 Moderate Impairment";
-      return "🟢 Independent";
+      return "🟢 No/Low Impairment";
     }
 
     // normal tests

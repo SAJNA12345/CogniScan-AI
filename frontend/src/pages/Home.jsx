@@ -23,7 +23,7 @@ export default function Home() {
       <div style={styles.container}>
         <h1 style={styles.title}>🧠 CogniScan</h1>
         <p style={styles.subtitle}>
-          AI-powered cognitive, speech & pattern analysis for early detection
+          Intelligent dementia early screening and assessment system
         </p>
 
         <div style={styles.cardContainer}>
