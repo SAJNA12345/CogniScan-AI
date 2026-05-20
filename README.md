@@ -1,7 +1,7 @@
 # 🧠 CogniScan 
 ### Intelligent Dementia Early Screening & Cognitive Assessment System
 
-CogniScan AI is a healthcare-focused web application designed for early dementia screening using cognitive evaluation, functional assessment, and dementia risk analysis.  
+CogniScan is a healthcare-focused web application designed for early dementia screening using cognitive evaluation, functional assessment, and dementia risk analysis.  
 
 The platform provides an interactive assessment experience, real-time scoring, performance analytics, and downloadable medical-style reports.
 
