@@ -1,23 +1,26 @@
 """
 CogniScan ML / digital-biomarker service.
 
-This service owns speech-based biomarker extraction. It exposes a stable
-contract (`POST /analyze`) that the agentic backend calls as a tool. Phase 0
-establishes the boundary and response schema; Phase 2 fills in the real
-acoustic + linguistic biomarker models and a calibrated risk estimate.
+Owns speech-based biomarker extraction. `POST /analyze` accepts an audio
+recording, transcribes it (Whisper), extracts acoustic + linguistic
+biomarkers, and returns an explainable, calibrated dementia-risk signal.
+
+The agentic backend (Phase 1) calls this as a tool. Heavy models load lazily
+and are cached after first use (and prebaked in the Docker image).
 """
 
 import os
+import subprocess
 import tempfile
-from collections import Counter
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
-app = FastAPI(title="CogniScan ML Service", version="0.1.0")
+from biomarkers import acoustic, linguistic, scoring
+from schemas import AnalyzeResponse
 
-# Allow the backend (and, in dev, the frontend) to call this service.
+app = FastAPI(title="CogniScan ML Service", version="0.2.0")
+
 _allowed = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -26,8 +29,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Whisper is heavy; load it lazily so the service boots instantly for the
-# boundary/health checks and only pays the cost on first real transcription.
 _model = None
 
 
@@ -40,32 +41,16 @@ def _get_model():
     return _model
 
 
-# ---- Response contract (Phase 2 fills these with real biomarker models) ----
-
-
-class SpeechFeatures(BaseModel):
-    """Acoustic biomarkers. TODO(phase2): pause ratio, speech rate, jitter."""
-
-    duration_sec: float | None = None
-    pause_ratio: float | None = None
-    speech_rate_wpm: float | None = None
-
-
-class LinguisticFeatures(BaseModel):
-    word_count: int
-    unique_words: int
-    type_token_ratio: float
-    max_repetition: int
-    # TODO(phase2): idea density, semantic coherence (embeddings), perplexity.
-
-
-class AnalyzeResponse(BaseModel):
-    transcript: str
-    speech: SpeechFeatures
-    linguistic: LinguisticFeatures
-    # TODO(phase2): calibrated risk score + uncertainty live here.
-    risk_score: float | None = None
-    uncertainty: float | None = None
+def _to_wav(src_path: str) -> str:
+    """Normalize any uploaded audio to 16 kHz mono WAV for Praat/Whisper."""
+    wav_path = src_path + ".16k.wav"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", src_path, "-ac", "1", "-ar", "16000", wav_path],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return wav_path
 
 
 @app.get("/health")
@@ -75,30 +60,28 @@ def health():
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(file: UploadFile = File(...)):
-    # Persist upload to a temp file for the transcriber.
-    suffix = os.path.splitext(file.filename or "")[1] or ".wav"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())
-        audio_path = tmp.name
-
+    suffix = os.path.splitext(file.filename or "")[1] or ".bin"
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    wav_path = None
     try:
-        result = _get_model().transcribe(audio_path)
-        text = result.get("text", "").strip()
+        tmp.write(await file.read())
+        tmp.close()
+
+        try:
+            wav_path = _to_wav(tmp.name)
+        except subprocess.CalledProcessError:
+            raise HTTPException(status_code=400, detail="Unsupported or corrupt audio")
+
+        result = _get_model().transcribe(wav_path)
+        text = (result.get("text") or "").strip()
+        segments = result.get("segments") or []
+
+        ling = linguistic.extract(text)
+        acou = acoustic.extract(wav_path, segments, ling.get("word_count", 0))
+        risk = scoring.score(acou, ling)
+
+        return AnalyzeResponse(transcript=text, acoustic=acou, linguistic=ling, risk=risk)
     finally:
-        os.unlink(audio_path)
-
-    words = text.split()
-    word_count = len(words)
-    unique_words = len(set(words))
-    freq = Counter(words)
-
-    return AnalyzeResponse(
-        transcript=text,
-        speech=SpeechFeatures(),
-        linguistic=LinguisticFeatures(
-            word_count=word_count,
-            unique_words=unique_words,
-            type_token_ratio=(unique_words / word_count) if word_count else 0.0,
-            max_repetition=max(freq.values()) if freq else 0,
-        ),
-    )
+        for p in (tmp.name, wav_path):
+            if p and os.path.exists(p):
+                os.unlink(p)

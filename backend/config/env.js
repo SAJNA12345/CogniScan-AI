@@ -19,4 +19,7 @@ module.exports = {
   MONGO_URI: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/dementiaDB",
   PORT: parseInt(process.env.PORT, 10) || 5000,
   ML_SERVICE_URL: process.env.ML_SERVICE_URL || "http://localhost:8000",
+  // Phase 1 agentic service. In Docker this is the compose service name;
+  // for bare-metal dev it's the agent-service host port (8080).
+  AGENT_SERVICE_URL: process.env.AGENT_SERVICE_URL || "http://localhost:8080",
 };
