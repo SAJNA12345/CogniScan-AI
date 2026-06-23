@@ -12,7 +12,7 @@ export default function Progress() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/results", {
+      const res = await fetch("/api/results", {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ FIXED
         },

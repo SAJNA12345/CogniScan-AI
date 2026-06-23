@@ -122,7 +122,7 @@
 //       console.log("Sending:", finalResult);
 
 //       // 🔥 SAVE TO DB
-//       await fetch("http://localhost:5000/api/results", {
+//       await fetch("/api/results", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -426,7 +426,7 @@ export default function CognitiveTest() {
       (finalScore / (questions.length - 1)) * 100
     ); // exclude info question
 
-    await fetch("http://localhost:5000/api/results", {
+    await fetch("/api/results", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

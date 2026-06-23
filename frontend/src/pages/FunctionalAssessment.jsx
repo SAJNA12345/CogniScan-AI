@@ -40,7 +40,7 @@ export default function FunctionalAssessment() {
 
     const percentage = Math.round((totalScore / (questions.length * 2)) * 100);
 
-    await fetch("http://localhost:5000/api/results", {
+    await fetch("/api/results", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

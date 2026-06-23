@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
-require("dotenv").config();
+const { PORT } = require("./config/env");
 
 const app = express();
 
@@ -18,4 +18,4 @@ app.use("/api/results", require("./routes/resultRoutes"));
 app.use("/api/user", require("./routes/userRoutes"));
 
 // Server
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

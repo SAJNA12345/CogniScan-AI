@@ -19,7 +19,7 @@
 
 //   const fetchResults = async () => {
 //     try {
-//       const res = await fetch("http://localhost:5000/api/results", {
+//       const res = await fetch("/api/results", {
 //         headers: {
 //           Authorization: `Bearer ${localStorage.getItem("token")}`,
 //         },
@@ -288,7 +288,7 @@ export default function Results() {
 
   const fetchResults = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/results", {
+      const res = await fetch("/api/results", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

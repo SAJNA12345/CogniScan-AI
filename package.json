@@ -1,5 +1,12 @@
 {
-  "dependencies": {
-    "react-router-dom": "^7.14.1"
+  "name": "cogniscan-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agentic multimodal platform for early dementia screening",
+  "scripts": {
+    "backend": "node backend/server.js",
+    "frontend": "npm --prefix frontend run dev",
+    "ml": "uvicorn main:app --app-dir ml-service --reload --port 8000",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install"
   }
 }

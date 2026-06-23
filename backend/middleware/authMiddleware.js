@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/env");
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -11,7 +12,7 @@ module.exports = (req, res, next) => {
     // ✅ Extract token from "Bearer token"
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, "secret");
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     req.user = decoded;
     next();

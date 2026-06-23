@@ -71,7 +71,7 @@ export default function PatternTest() {
       // 🔥 SAVE RESULT
 
       const percentage = Math.round((score / questions.length) * 100);
-      await fetch("http://localhost:5000/api/results", {
+      await fetch("/api/results", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET, JWT_EXPIRES_IN } = require("../config/env");
 
 
 // =======================
@@ -18,8 +19,6 @@ exports.signup = async (req, res) => {
       console.log("User already exists");
       return res.status(400).json({ message: "User already exists" });
     }
-
-    const bcrypt = require("bcryptjs");
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -73,12 +72,13 @@ exports.login = async (req, res) => {
     // 🔹 Generate token
     const token = jwt.sign(
       { id: user._id },
-      "secret", // ⚠️ later move to env
-      { expiresIn: "1d" }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     console.log("Login successful:", user.email);
 
+    
     // 🔹 Send response (VERY IMPORTANT)
     res.json({
       token,

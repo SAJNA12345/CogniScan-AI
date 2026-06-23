@@ -75,7 +75,7 @@ export default function RiskFactors() {
 
     const percentage = Math.min(Math.round((finalScore / 16) * 100), 100);
 
-    await fetch("http://localhost:5000/api/results", {
+    await fetch("/api/results", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
